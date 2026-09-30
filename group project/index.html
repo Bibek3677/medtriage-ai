@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MedTriage AI — Patient Intake & Care Coordination</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+      MedTriage AI
+    </div>
+    <div class="tabs" role="tablist" aria-label="Views">
+      <button class="tab" role="tab" id="tab-intake" aria-selected="true" aria-controls="view-intake">New intake</button>
+      <button class="tab" role="tab" id="tab-queue" aria-selected="false" aria-controls="view-queue" tabindex="-1">Care queue<span class="count" id="qcount">0</span></button>
+      <button class="tab" role="tab" id="tab-protocol" aria-selected="false" aria-controls="view-protocol" tabindex="-1">Protocol</button>
+    </div>
+    <button class="theme-btn" id="theme" aria-label="Switch to dark theme" title="Switch theme"><span aria-hidden="true" id="theme-icon">◐</span></button>
+  </div>
+</header>
+<div class="disclaimer" role="note">
+  <div class="wrap"><strong>Educational prototype.</strong> Uses simple demonstration rules, not medical knowledge. Don't enter real patient information. In an emergency, call 911.</div>
+</div>
+
+<main class="wrap">
+  <!-- INTAKE VIEW -->
+  <section id="view-intake" role="tabpanel" aria-labelledby="tab-intake">
+    <div class="intake">
+      <nav aria-label="Intake steps">
+        <ol class="steps" id="steps"></ol>
+        <div class="samples">
+          <p>Load a sample case to demo the flow:</p>
+          <button data-sample="chest">58-year-old, chest pain</button>
+          <button data-sample="child">Toddler with high fever</button>
+          <button data-sample="cold">Adult with a mild cold</button>
+        </div>
+      </nav>
+
+      <div class="panel">
+        <!-- Step 1 -->
+        <form class="step" data-step="0" novalidate onsubmit="return false">
+          <h2>Patient intake</h2>
+          <p class="lede">Start with who the patient is. Use a made-up name or ID — this prototype is for demonstration only.</p>
+          <div class="grid">
+            <div class="field"><label for="p-name">Name or ID <span class="hint">(pseudonym)</span></label><input id="p-name" autocomplete="off" placeholder="e.g. Patient A-102"><div class="err"></div></div>
+            <div class="field"><label for="p-age">Age in years</label><input id="p-age" type="number" inputmode="decimal" min="0" max="120" step="0.1" placeholder="e.g. 34"><div class="err"></div></div>
+            <div class="field"><label for="p-sex">Sex</label>
+              <select id="p-sex"><option value="">Select…</option><option>Female</option><option>Male</option><option>Intersex</option><option>Prefer not to say</option></select><div class="err"></div></div>
+            <div class="field"><label for="p-contact">Follow-up by</label>
+              <select id="p-contact"><option>Phone call</option><option>Text message</option><option>Email</option><option>Patient portal</option></select></div>
+          </div>
+        </form>
+
+        <!-- Step 2 -->
+        <form class="step hidden" data-step="1" novalidate onsubmit="return false">
+          <h2>Symptom review</h2>
+          <p class="lede">Select everything the patient reports. Red-bordered symptoms are warning signs.</p>
+          <fieldset>
+            <legend class="legend">Warning signs</legend>
+            <div class="chips red-flags" id="chips-red"></div>
+            <p class="group-title">Common symptoms</p>
+            <div class="chips" id="chips-common"></div>
+            <div class="err" id="sym-err"></div>
+          </fieldset>
+          <div class="grid">
+            <div class="field" style="grid-column:1 / -1">
+              <label for="sev">Severity <span class="hint">(patient-reported, 0–10)</span></label>
+              <div class="sev"><input id="sev" type="range" min="0" max="10" value="3" aria-describedby="sev-desc"><output id="sev-out" for="sev">3</output></div>
+              <div class="sev-scale" id="sev-desc"><span>No pain</span><span>Moderate</span><span>Worst imaginable</span></div>
+            </div>
+            <div class="field"><label for="dur">Started</label>
+              <select id="dur"><option value="">Select…</option><option value="0.1">Less than 6 hours ago</option><option value="1">Today</option><option value="3">1–3 days ago</option><option value="7">4–7 days ago</option><option value="14">1–2 weeks ago</option><option value="30">More than 2 weeks ago</option></select><div class="err"></div></div>
+            <div class="field" style="grid-column:1 / -1"><label for="notes">Notes <span class="hint">(optional)</span></label><textarea id="notes" placeholder="In the patient's words…"></textarea></div>
+          </div>
+        </form>
+
+        <!-- Step 3 -->
+        <form class="step hidden" data-step="2" novalidate onsubmit="return false">
+          <h2>Vitals &amp; history</h2>
+          <p class="lede">Vitals are optional, but the assessment is more reliable with them. Leave blank anything you didn't measure.</p>
+          <div class="grid">
+            <div class="field"><label for="v-temp">Temperature <span class="hint">°F</span></label><input id="v-temp" type="number" inputmode="decimal" step="0.1" placeholder="98.6"><div class="err"></div></div>
+            <div class="field"><label for="v-hr">Heart rate <span class="hint">bpm</span></label><input id="v-hr" type="number" inputmode="numeric" placeholder="72"><div class="err"></div></div>
+            <div class="field"><label for="v-sbp">Blood pressure, top <span class="hint">mmHg</span></label><input id="v-sbp" type="number" inputmode="numeric" placeholder="120"><div class="err"></div></div>
+            <div class="field"><label for="v-dbp">Blood pressure, bottom <span class="hint">mmHg</span></label><input id="v-dbp" type="number" inputmode="numeric" placeholder="80"><div class="err"></div></div>
+            <div class="field"><label for="v-rr">Breathing rate <span class="hint">/min</span></label><input id="v-rr" type="number" inputmode="numeric" placeholder="16"><div class="err"></div></div>
+            <div class="field"><label for="v-spo2">Oxygen saturation <span class="hint">%</span></label><input id="v-spo2" type="number" inputmode="numeric" placeholder="98"><div class="err"></div></div>
+          </div>
+          <fieldset style="margin-top:26px">
+            <legend class="legend">Medical history</legend>
+            <div class="chips" id="chips-history"></div>
+          </fieldset>
+          <div class="field"><label for="meds">Current medications or allergies <span class="hint">(optional)</span></label><textarea id="meds" style="min-height:64px"></textarea></div>
+        </form>
+
+        <!-- Step 4 -->
+        <div class="step hidden" data-step="3">
+          <h2>Triage assessment</h2>
+          <p class="lede">Here's the preliminary category and why. A reviewer can override it before the case is routed.</p>
+          <div class="result">
+            <div>
+              <div class="tag" id="tag"></div>
+            </div>
+            <div>
+              <div class="route" id="route"></div>
+              <div id="flags"></div>
+              <h3 class="section-h">Why this category</h3>
+              <ul class="why" id="why"></ul>
+              <details class="override" id="override">
+                <summary>Reviewer override</summary>
+                <div class="grid">
+                  <div class="field"><label for="ov-level">Change category to</label>
+                    <select id="ov-level"><option value="">Keep as assessed</option><option value="1">Emergency</option><option value="2">Urgent</option><option value="3">Soon</option><option value="4">Self-care</option></select></div>
+                  <div class="field"><label for="ov-by">Reviewer initials</label><input id="ov-by" maxlength="6" autocomplete="off"><div class="err"></div></div>
+                  <div class="field" style="grid-column:1 / -1"><label for="ov-reason">Reason</label><input id="ov-reason" autocomplete="off" placeholder="Required when changing the category"><div class="err"></div></div>
+                </div>
+                <div style="margin-top:12px"><button class="btn small" id="ov-apply">Apply override</button></div>
+                <p class="overridden-note" id="ov-note"></p>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step hidden" data-step="4">
+          <h2>Provider &amp; appointment</h2>
+          <p class="lede" id="rt-lede">Routing this case to a destination that accepts its category.</p>
+          <div id="rt-window"></div>
+          <div id="rt-tags"></div>
+          <div id="rt-list"></div>
+          <p class="booked" id="rt-booked" role="status" aria-live="polite"></p>
+          <div class="err" id="rt-err"></div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step hidden" data-step="5">
+          <h2>Follow-up &amp; reminders</h2>
+          <p class="lede" id="fu-lede">Suggested reminders are based on the triage category and the booked visit. Edit them, then save the case to the care queue.</p>
+          <ul class="rem-list" id="rem-list"></ul>
+          <div class="add-rem">
+            <div class="field"><label for="rem-text">Add a reminder</label><input id="rem-text" placeholder="e.g. Call to confirm appointment"></div>
+            <div class="field"><label for="rem-when">When</label>
+              <select id="rem-when"><option value="1">In 1 hour</option><option value="4">In 4 hours</option><option value="24" selected>Tomorrow</option><option value="72">In 3 days</option><option value="168">In 1 week</option></select></div>
+            <button class="btn" id="rem-add">Add</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" id="back">Back</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn hidden" id="copy">Copy summary</button>
+            <button class="btn primary" id="next">Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUEUE VIEW -->
+  <section id="view-queue" class="hidden" role="tabpanel" aria-labelledby="tab-queue" tabindex="-1">
+    <div class="queue-head">
+      <div>
+        <h2>Care queue</h2>
+        <p class="q-meta">Saved cases, highest priority first. Stored only in this browser.</p>
+      </div>
+      <div class="legend-row" aria-hidden="true">
+        <span><i class="dot" style="--dc:var(--t1)"></i>Emergency</span>
+        <span><i class="dot" style="--dc:var(--t2)"></i>Urgent</span>
+        <span><i class="dot" style="--dc:var(--t3)"></i>Soon</span>
+        <span><i class="dot" style="--dc:var(--t4)"></i>Self-care</span>
+      </div>
+    </div>
+    <div id="queue"></div>
+  </section>
+
+  <!-- PROTOCOL VIEW -->
+  <section id="view-protocol" class="hidden" role="tabpanel" aria-labelledby="tab-protocol" tabindex="-1">
+    <div class="queue-head">
+      <div>
+        <h2>Triage protocol</h2>
+        <p class="q-meta">The complete rule set the assessment runs on, and the destinations each category can be routed to.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 class="section-h">Categories</h3>
+      <div class="cat-grid" id="proto-levels"></div>
+      <h3 class="section-h" style="margin-top:32px">Rules</h3>
+      <p class="lede">Every rule is evaluated on each case. The most urgent rule that fires sets the category; all of them are listed as reasons.</p>
+      <div id="proto-rules"></div>
+      <h3 class="section-h" style="margin-top:32px">Provider directory</h3>
+      <div class="table-scroll"><table class="tbl" id="proto-providers"></table></div>
+    </div>
+  </section>
+</main>
+<footer class="wrap">MedTriage AI · ITC 6250 group project prototype. Not a medical device. Rules are simplified for demonstration and must not be used for real care decisions.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="rules.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

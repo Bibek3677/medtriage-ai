@@ -1,0 +1,13 @@
+{
+  "name": "medtriage-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ITC 6250 Group 5 — low-code/no-code patient intake, triage, care routing and follow-up prototype",
+  "scripts": {
+    "start": "node serve.js",
+    "test": "node --test \"tests/*.test.js\""
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
